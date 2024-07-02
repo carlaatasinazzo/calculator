@@ -1,24 +1,45 @@
 let currentInput = '';
 
 function appendToDisplay(value) {
-  currentInput += value;
-  document.getElementById('display').value = currentInput;
+  // Check if appending a decimal point is valid
+  if (value === '.') {
+    // Ensure only one decimal point is added
+    if (currentInput.includes('.')) {
+      return;
+    }
+    // If currentInput is empty, append '0.' to start with a decimal number
+    if (currentInput === '') {
+      currentInput = '0.';
+    } else {
+      currentInput += '.';
+    }
+  } else {
+    currentInput += value;
+  }
+  
+  updateDisplay();
+}
+
+function backspace() {
+  currentInput = currentInput.slice(0, -1); // Remove the last character
+  updateDisplay();
 }
 
 function clearDisplay() {
   currentInput = '';
-  document.getElementById('display').value = '';
+  updateDisplay();
 }
 
 function calculate() {
   let result = 'Error';
   try {
     result = evaluateExpression(currentInput);
+    result = roundResult(result, 2); // Round result to 2 decimal places
   } catch (error) {
     console.error('Error evaluating expression:', error);
   }
   document.getElementById('display').value = result;
-  currentInput = result.toString(); // Store result for further calculations
+  currentInput = result.toString(); // Store rounded result for further calculations
 }
 
 function evaluateExpression(expression) {
@@ -28,7 +49,8 @@ function evaluateExpression(expression) {
 }
 
 function tokenize(expression) {
-  const pattern = /\d+\.?\d*|[+\-*/()]/g;
+  // Tokenize expression considering numbers with decimals
+  const pattern = /\d+(\.\d+)?|[+\-*/()]/g;
   return expression.match(pattern) || [];
 }
 
@@ -76,11 +98,16 @@ function parse(tokens) {
       }
       index++;
       return expression;
-    } else if (!isNaN(parseFloat(token))) {
-      return parseFloat(token);
+    } else if (!isNaN(parseNumber(token))) {
+      return parseNumber(token);
     } else {
       throw new Error('Unexpected token: ' + token);
     }
+  }
+
+  function parseNumber(token) {
+    // Parse number and handle decimals
+    return parseFloat(token);
   }
 
   return parseExpression();
@@ -110,5 +137,15 @@ function evaluate(expression) {
       throw new Error('Unknown operator: ' + type);
   }
 }
+
+function roundResult(value, decimals) {
+  return parseFloat(value.toFixed(decimals));
+}
+
+function updateDisplay() {
+  document.getElementById('display').value = currentInput;
+}
+
+
 
 
